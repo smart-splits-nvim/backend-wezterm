@@ -1,3 +1,4 @@
+local capture = require('tests.fixtures.capture_user_vars')
 local h = require('tests.helpers')
 
 describe('resize()', function()
@@ -5,49 +6,29 @@ describe('resize()', function()
     h.reset_backend()
   end)
 
-  it('resizes right', function()
-    local backend = require('smart-splits-backend-template')
-    local mock_mux = require('smart-splits-backend-template.mock_mux')
-    local initial_width = mock_mux.get_current_pane().width
+  it('writes a SMART_SPLITS_REQ resize request', function()
+    local backend = require('smart-splits-backend-wezterm')
     assert.is_true(backend.resize('right', { amount = 5 }))
-    assert.are.equal(initial_width + 5, mock_mux.get_current_pane().width)
+
+    local name, value = capture.decode_last()
+    assert.are.equal('SMART_SPLITS_REQ', name)
+    local payload = vim.json.decode(value)
+    assert.are.equal('resize', payload.action)
+    assert.are.equal('right', payload.dir)
+    assert.are.equal(5, payload.amount)
   end)
 
-  it('resizes left', function()
-    local backend = require('smart-splits-backend-template')
-    local mock_mux = require('smart-splits-backend-template.mock_mux')
-    local initial_width = mock_mux.get_current_pane().width
-    assert.is_true(backend.resize('left', { amount = 5 }))
-    assert.are.equal(initial_width - 5, mock_mux.get_current_pane().width)
+  it('defaults amount to 1 when not specified', function()
+    local backend = require('smart-splits-backend-wezterm')
+    backend.resize('left')
+    local _, value = capture.decode_last()
+    assert.are.equal(1, vim.json.decode(value).amount)
   end)
 
-  it('resizes down', function()
-    local backend = require('smart-splits-backend-template')
-    local mock_mux = require('smart-splits-backend-template.mock_mux')
-    local initial_height = mock_mux.get_current_pane().height
-    assert.is_true(backend.resize('down', { amount = 3 }))
-    assert.are.equal(initial_height + 3, mock_mux.get_current_pane().height)
-  end)
-
-  it('resizes up', function()
-    local backend = require('smart-splits-backend-template')
-    local mock_mux = require('smart-splits-backend-template.mock_mux')
-    local initial_height = mock_mux.get_current_pane().height
-    assert.is_true(backend.resize('up', { amount = 3 }))
-    assert.are.equal(initial_height - 3, mock_mux.get_current_pane().height)
-  end)
-
-  it('uses default amount of 1 when not specified', function()
-    local backend = require('smart-splits-backend-template')
-    local mock_mux = require('smart-splits-backend-template.mock_mux')
-    local initial_width = mock_mux.get_current_pane().width
-    assert.is_true(backend.resize('right'))
-    assert.are.equal(initial_width + 1, mock_mux.get_current_pane().width)
-  end)
-
-  it('returns false when backend is disabled', function()
-    local backend = require('smart-splits-backend-template')
-    h.disable_backend()
-    assert.is_false(backend.resize('right'))
+  it('floors a fractional amount', function()
+    local backend = require('smart-splits-backend-wezterm')
+    backend.resize('down', { amount = 3.7 })
+    local _, value = capture.decode_last()
+    assert.are.equal(3, vim.json.decode(value).amount)
   end)
 end)

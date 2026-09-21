@@ -5,20 +5,33 @@ describe('health()', function()
     h.reset_backend()
   end)
 
-  it('reports healthy when backend is enabled', function()
-    local backend = require('smart-splits-backend-template')
+  it('does not error when fully detected', function()
+    local backend = require('smart-splits-backend-wezterm')
     assert.is_not_nil(backend.health)
-    -- Health check should not error
     assert.has_no.errors(function()
       backend.health()
     end)
   end)
 
-  it('reports unhealthy when backend is disabled', function()
-    local backend = require('smart-splits-backend-template')
-    h.disable_backend()
-    assert.is_not_nil(backend.health)
-    -- Health check should not error even when disabled
+  it('does not error when the GUI plugin handshake var is absent', function()
+    local backend = require('smart-splits-backend-wezterm')
+    vim.env.SMART_SPLITS_WEZTERM = nil
+    assert.has_no.errors(function()
+      backend.health()
+    end)
+  end)
+
+  it('does not error when not in a WezTerm pane at all', function()
+    local backend = require('smart-splits-backend-wezterm')
+    h.clear_wezterm_env()
+    assert.has_no.errors(function()
+      backend.health()
+    end)
+  end)
+
+  it('does not error on a plugin version mismatch', function()
+    local backend = require('smart-splits-backend-wezterm')
+    vim.env.SMART_SPLITS_WEZTERM = '0.0.1-not-a-real-version'
     assert.has_no.errors(function()
       backend.health()
     end)

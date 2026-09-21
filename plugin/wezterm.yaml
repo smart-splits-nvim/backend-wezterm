@@ -1,0 +1,9 @@
+# WezTerm embeds Lua 5.4, but this plugin uses no 5.4-only syntax (no //, bitwise ops, <const>),
+# so `base: lua51` (matching the repo root's vim.yaml) is used here too rather than assuming
+# selene's std bundle ships a "lua54" base — verify locally with `selene --version` / its std docs
+# and switch this if a more precise base is available and confirmed to work.
+base: lua51
+name: wezterm
+globals:
+  wezterm:
+    any: true

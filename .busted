@@ -5,6 +5,7 @@ return {
     helper = 'tests/init.lua',
     pattern = '_spec',
   },
-  default = { ROOT = { 'tests/core' } },
+  default = { ROOT = { 'tests/core', 'tests/plugin' } },
   core = { ROOT = { 'tests/core' } },
+  plugin = { ROOT = { 'tests/plugin' } },
 }

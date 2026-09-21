@@ -22,12 +22,20 @@ deps-force:
     just deps
 
 # Run all tests
+# `core` exercises the Neovim-side backend against smart-splits core's protocol_tests. `plugin`
+# exercises plugin/'s pane-navigation decision logic against a fake `wezterm` module (see
+# tests/fixtures/fake_wezterm.lua) — real key dispatch and real WezTerm objects still need the
+# manual checklist in README.md, which this does not replace.
 test: deps
-    SMART_SPLITS_DIR="$(pwd)/deps/smart-splits.nvim" busted --run=core
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export SMART_SPLITS_DIR="$(pwd)/deps/smart-splits.nvim"
+    busted --run=core
+    busted --run=plugin
 
 # Check formatting
 fmt-check:
-    stylua --check lua tests
+    stylua --check lua tests plugin
     yamlfmt -gitignore_excludes -dry .
     prettier --check "**/*.{json,jsonc}"
     tombi format --offline --check .
@@ -35,25 +43,33 @@ fmt-check:
 
 # Format code
 fmt:
-    stylua lua tests
+    stylua lua tests plugin
     yamlfmt -gitignore_excludes .
     prettier --write "**/*.{json,jsonc}"
     tombi format --offline .
     nixfmt flake.nix treefmt.nix
 
 # Run selene
+# plugin/ has its own selene.toml (std = "wezterm", not "vim"), so it's linted from inside that
+# directory: selene resolves its config by walking up from cwd, and the repo-root selene.toml
+# would otherwise shadow it.
 lint:
     selene ./lua/ ./tests/
+    cd plugin && selene .
     actionlint
     statix check
 
 # Run LuaLS type checking
+# plugin/ is excluded from the root check via .luarc.json's ignoreDir and checked separately
+# against its own .luarc.json (globals = ["wezterm"], not ["vim"]).
 typecheck: deps
     #!/usr/bin/env bash
+    set -euo pipefail
     tmpdir="$(mktemp -d)"
     trap 'rm -rf "$tmpdir"' EXIT
     VIMRUNTIME="$(nvim --clean -i NONE --headless --cmd 'lua io.write(vim.env.VIMRUNTIME)' --cmd 'quitall')" \
     lua-language-server --check=. --checklevel=Warning --check_format=pretty --configpath=.luarc.json --logpath="$tmpdir/luals"
+    lua-language-server --check=./plugin --checklevel=Warning --check_format=pretty --configpath=./plugin/.luarc.json --logpath="$tmpdir/luals-plugin"
 
 # Run all checks
 check: fmt-check lint typecheck test

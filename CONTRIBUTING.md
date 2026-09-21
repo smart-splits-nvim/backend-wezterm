@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for your interest in contributing to this backend template!
+Thank you for your interest in contributing to backend-wezterm!
 
 ## Development Setup
 
@@ -100,12 +100,28 @@ end
 
 ### Testing
 
-All new functionality should include tests. The test suite uses:
+All new functionality in `lua/smart-splits-backend-wezterm/` should include tests. The test suite
+uses:
 - Busted test framework
 - nlua (Neovim Lua interpreter)
 - smart-splits core's `protocol_tests` for conformance
+- `tests/fixtures/capture_user_vars.lua`, which replaces `userscript._write` with a collector so
+  specs assert on the actual OSC 1337 sequences the backend writes, instead of mocking a subprocess
 
 Test files follow the pattern `tests/core/*_spec.lua`.
+
+**`plugin/` runs inside WezTerm's own Lua runtime**, which `busted`/`nlua` can't reach directly —
+but its pane-navigation decision logic (`do_move`/`do_wrap`/`do_split`, the `user-var-changed`
+dispatch, `apply_to_config`'s keybinding wiring) is still tested, against a fake `wezterm` module
+(`tests/fixtures/fake_wezterm.lua`, `tests/fixtures/fake_pane.lua`) that's pre-loaded via
+`package.loaded.wezterm` before `plugin/init.lua` is `require()`d — see `tests/plugin/helpers.lua`.
+Test files follow the pattern `tests/plugin/*_spec.lua`, run by the same `just test`.
+
+What that fake can't cover — real WezTerm key dispatch, real pane objects, the real OSC 1337
+round-trip — still needs a real WezTerm. Changes to `plugin/init.lua` or `plugin/geometry.lua`
+should add a `tests/plugin/` spec where the logic can be expressed against the fake, *and* be
+verified by hand for anything it can't: walk the checklist in
+[README.md](./README.md#release-checklist) and say what you tested in your PR description.
 
 ## Code Style
 

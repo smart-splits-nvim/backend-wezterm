@@ -1,19 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
   "runtime": {
-    "version": "LuaJIT"
+    "version": "Lua 5.4"
   },
   "workspace": {
     "checkThirdParty": false,
-    "library": [
-      "$VIMRUNTIME/lua",
-      "${3rd}/luv/library",
-      "deps/smart-splits.nvim/lua"
-    ],
-    "ignoreDir": ["tests", ".direnv", "plugin"]
+    "library": []
   },
   "diagnostics": {
-    "globals": ["vim"],
+    "globals": ["wezterm"],
     "libraryFiles": "Disable"
   }
 }

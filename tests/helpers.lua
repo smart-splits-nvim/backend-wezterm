@@ -1,20 +1,29 @@
 local M = {}
 
+---@param opts? { pane?: string, plugin_version?: string }
+function M.set_wezterm_env(opts)
+  opts = opts or {}
+  local health = require('smart-splits-backend-wezterm.health')
+  vim.env.WEZTERM_PANE = opts.pane or '0'
+  vim.env.SMART_SPLITS_WEZTERM = opts.plugin_version or health.COMPATIBLE_PLUGIN_VERSION
+end
+
+function M.clear_wezterm_env()
+  vim.env.WEZTERM_PANE = nil
+  vim.env.SMART_SPLITS_WEZTERM = nil
+end
+
+---Reset config, the captured-writes fixture, and WezTerm env vars to a known "fully detected"
+---state. Call from `before_each`.
 function M.reset_backend()
-  local mock_mux = require('smart-splits-backend-template.mock_mux')
-  mock_mux.reset()
-  local config = require('smart-splits-backend-template.config')
+  local capture = require('tests.fixtures.capture_user_vars')
+  capture.install()
+  capture.reset()
+
+  local config = require('smart-splits-backend-wezterm.config')
   config.setup()
-end
 
-function M.disable_backend()
-  local mock_mux = require('smart-splits-backend-template.mock_mux')
-  mock_mux.set_enabled(false)
-end
-
-function M.enable_backend()
-  local mock_mux = require('smart-splits-backend-template.mock_mux')
-  mock_mux.set_enabled(true)
+  M.set_wezterm_env()
 end
 
 return M
