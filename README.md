@@ -72,6 +72,11 @@ smart_splits.apply_to_config(config, {
     resize = 'META', -- e.g. META+h to resize left
   },
 
+  -- how many cells a direct resize keybinding (a keypress in a pane not running Neovim) adjusts
+  -- the pane by; resize requests from Neovim carry their own amount, taken from Neovim's
+  -- `resize.amount`, so this does not apply to them
+  resize_amount = 3,
+
   -- what happens when there's no WezTerm pane in that direction: both a *direct* keypress in a
   -- pane not running Neovim, and a request from Neovim reporting it hit its own edge, resolve
   -- through this same option — smart-splits.nvim's own `move.at_edge` config has no effect here:
