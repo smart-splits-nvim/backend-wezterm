@@ -72,6 +72,10 @@ local DEFAULTS = {
     move = 'CTRL',
     resize = 'META',
   },
+  -- how many cells a direct resize keybinding (a keypress in a pane not running Neovim) adjusts
+  -- the pane by; resize requests from Neovim carry their own amount, taken from Neovim's
+  -- `resize.amount`, so this does not apply to them
+  resize_amount = 3,
   -- what to do when moving and there is no pane in that direction: 'stop' passes the keystroke
   -- through to the program in the pane (see is_nvim() below — this only matters for panes not
   -- running Neovim directly, i.e. keypresses dispatched straight from a WezTerm keybinding).
@@ -359,7 +363,7 @@ function M.apply_to_config(config, opts)
         if is_nvim(pane) then
           window:perform_action(act.SendKey({ key = resize_key, mods = config_opts.modifiers.resize }), pane)
         else
-          do_resize(window, pane, direction, 1)
+          do_resize(window, pane, direction, config_opts.resize_amount)
         end
       end),
     })
